@@ -34,6 +34,7 @@ public class UserRepositoryTest {
     public void setUp() {
         user = new User();
         user.setFirstName("Jan");
+        user.setLastName("Kowalski");
         user.setEmail("john@domain.com");
         user.setAccountStatus(AccountStatus.NEW);
     }
@@ -66,4 +67,75 @@ public class UserRepositoryTest {
         assertThat(persistedUser.getId(), notNullValue());
     }
 
+    @Test
+    public void findByShouldReturnOneRecordFoundByFirstName() {
+        repository.save(user);
+        List<User> result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(user.getFirstName(), "Nonexistent", "Nonexistent");
+        assertThat(result, hasSize(1));
+        assertThat(result.get(0), equalTo(user));
+    }
+
+    @Test
+    public void findByShouldReturnOneRecordFoundByLastName() {
+        repository.save(user);
+        List<User> result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Nonexistent", user.getLastName(), "Nonexistent");
+        assertThat(result, hasSize(1));
+        assertThat(result.get(0), equalTo(user));
+    }
+
+    @Test
+    public void findByShouldReturnOneRecordFoundByEmail() {
+        repository.save(user);
+        List<User> result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Nonexistent", "Nonexistent", user.getEmail());
+        assertThat(result, hasSize(1));
+        assertThat(result.get(0), equalTo(user));
+    }
+
+    @Test
+    public void findByLowerAndUpperCase() {
+        repository.save(user);
+        List<User> result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Nonexistent", "Nonexistent", user.getEmail().toLowerCase());
+        assertThat(result, hasSize(1));
+        result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Nonexistent", user.getLastName().toLowerCase(), "Nonexistent");
+        assertThat(result, hasSize(1));
+        result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(user.getFirstName().toLowerCase(), "Nonexistent", "Nonexistent");
+        assertThat(result, hasSize(1));
+
+        repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Nonexistent", "Nonexistent", user.getEmail().toUpperCase());
+        assertThat(result, hasSize(1));
+        result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Nonexistent", user.getLastName().toUpperCase(), "Nonexistent");
+        assertThat(result, hasSize(1));
+        result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(user.getFirstName().toUpperCase(), "Nonexistent", "Nonexistent");
+        assertThat(result, hasSize(1));
+
+    }
+
+    @Test
+    public void findByShouldReturnZeroRecords() {
+        List<User> result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Nonexistent", "Nonexistent", user.getEmail());
+        assertThat(result, hasSize(0));
+        result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("Nonexistent", user.getLastName(), "Nonexistent");
+        assertThat(result, hasSize(0));
+        result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(user.getFirstName(), "Nonexistent", "Nonexistent");
+        assertThat(result, hasSize(0));
+    }
+
+    @Test
+    public void findByShouldReturnMultipleRecords() {
+        int howManyRecords = 10;
+        String firstName = "jan";
+        String lastName = "kowalski";
+        String email = "email@domain.com";
+
+        for (int i = 0; i < howManyRecords; i++) {
+            User user = new User();
+            user.setFirstName(firstName + i);
+            user.setLastName(lastName + i);
+            user.setEmail(i + email);
+            user.setAccountStatus(AccountStatus.NEW);
+            repository.save(user);
+        }
+        List<User> result = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(firstName, lastName, email);
+        assertThat(result, hasSize(howManyRecords));
+    }
 }
